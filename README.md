@@ -1,0 +1,2 @@
+# GoTut
+Go lang tutorial
