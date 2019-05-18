@@ -102,3 +102,79 @@ func (f HandlerFunc) ServeHTTP(w ResponseWriter, req *Request) {
     f(w, req)
 }
 ```
+### black identifier _
+- interface checks
+  - type assertions
+    ```javascript
+    if _, ok := val.(json.Marshaler); ok {
+        fmt.Printf("value %v of type %T implements json.Marshaler\n", val, val)
+    }
+    ```
+  - To guarantee that the implementation is correct, a global declaration using the blank identifier can be used in the package:
+    ```javascript
+    var _ json.Marshaler = (*RawMessage)(nil)
+    ```
+### Embedding
+- it's easier and more evocative to embed the two interfaces to form the new one
+```javascript
+// ReadWriter is the interface that combines the Reader and Writer interfaces.
+type ReadWriter interface {
+    Reader
+    Writer
+}
+```
+Only interfaces can be embedded within interfaces.
+- The same basic idea applies to structs
+```javascript
+// ReadWriter stores pointers to a Reader and a Writer.
+// It implements io.ReadWriter.
+type ReadWriter struct {
+    *Reader  // *bufio.Reader
+    *Writer  // *bufio.Writer
+}
+```
+The embedded elements are pointers to structs and of course must be initialized to point to valid structs before they can be used. The ReadWriter struct could be written as
+```javascript
+type ReadWriter struct {
+    reader *Reader
+    writer *Writer
+}
+```
+but then to promote the methods of the fields and to satisfy the io interfaces, we would also need to provide forwarding methods, like this:
+```javascript
+func (rw *ReadWriter) Read(p []byte) (n int, err error) {
+    return rw.reader.Read(p)
+}
+```
+By embedding the structs directly, we avoid this bookkeeping
+
+There's an important way in which embedding differs from subclassing. When we embed a type, the methods of that type become methods of the outer type, but when they are invoked the receiver of the method is the inner type, not the outer one
+- Embedding can also be a simple convenience
+```javascript
+type Job struct {
+    Command string
+    *log.Logger
+}
+```
+once initialized, we can log to the Job:
+```javascript
+job.Println("starting now...")
+```
+The Logger is a regular field of the Job struct, so we can initialize it in the usual way inside the constructor for Job, like this,
+```javascript
+func NewJob(command string, logger *log.Logger) *Job {
+    return &Job{command, logger}
+}
+```
+or with a composite literal,
+```javascript
+job := &Job{command, log.New(os.Stderr, "Job: ", log.Ldate)}
+```
+If we need to refer to an embedded field directly, the type name of the field, ignoring the package qualifier, serves as a field name
+```javascript
+func (job *Job) Printf(format string, args ...interface{}) {
+    job.Logger.Printf("%q: %s", job.Command, fmt.Sprintf(format, args...))
+}
+```
+- Embedding types introduces the problem of name conflicts but the rules to resolve them are simple
+- there is no problem if a field is added that conflicts with another field in another subtype if neither field is ever used.
