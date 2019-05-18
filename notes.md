@@ -178,3 +178,7 @@ func (job *Job) Printf(format string, args ...interface{}) {
 ```
 - Embedding types introduces the problem of name conflicts but the rules to resolve them are simple
 - there is no problem if a field is added that conflicts with another field in another subtype if neither field is ever used.
+
+### Concurrency
+- Do not communicate by sharing memory; instead, share memory by communicating.
+>Concurrent programming in many environments is made difficult by the subtleties required to implement correct access to shared variables. Go encourages a different approach in which shared values are passed around on channels and, in fact, never actively shared by separate threads of execution. Only one goroutine has access to the value at any given time. Data races cannot occur, by design. 
