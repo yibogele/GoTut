@@ -1,4 +1,5 @@
-package pattern
+package main
+
 
 import (
 	"errors"
@@ -49,5 +50,18 @@ func New(tickets int, timeout time.Duration) Interface {
 	return &implementation{
 		sem:		make(chan struct{}, tickets),
 		timeout:	timeout,
+	}
+}
+
+func main() {
+	tickets, timeout := 1, 3 * time.Second
+	s := New(tickets, timeout)
+
+	if err := s.Acquire(); err != nil {
+		panic(err)
+	}
+
+	if err := s.Release(); err != nil {
+		panic(err)
 	}
 }
