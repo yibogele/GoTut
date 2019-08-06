@@ -5,5 +5,7 @@ package main
  * By Will Fan
  */
 func main() {
-	$END$
+	ch := make(chan int)
+	ch <- 1
+	println(<-ch)
 }
